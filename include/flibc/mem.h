@@ -18,6 +18,8 @@
 #ifndef FLIBC_MEM_H
 #define FLIBC_MEM_H
 
+#include <stddef.h>
+
 /* The following functions need to be defined when using the freestanding
    environment with GCC. */
 void *memcpy(void *restrict dest, const void *restrict src, size_t n);
