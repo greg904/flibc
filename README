@@ -1,0 +1,2 @@
+A small subset of a C standard library that only gives you what you ask for and
+that tries to never incur any general cost on your application.
