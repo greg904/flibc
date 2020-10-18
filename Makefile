@@ -1,6 +1,7 @@
 object_files := libs/parse_vdso.o \
 	src/linux.o \
 	src/mem.o \
+	src/start.o \
 	src/str.o \
 	src/util.o
 deps_files := $(object_files:%.o=%.d)
@@ -21,6 +22,8 @@ format:
 
 %.o: %.c
 	${CC} $< -c -MD -o $@ ${CCFLAGS}
+%.o: %.S
+	${CC} $< -c -MD -o $@ ${ASFLAGS}
 
 # The compiler will generate dependencies for each implementation file.
 -include ${deps_files}

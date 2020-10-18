@@ -25,16 +25,10 @@
 typedef int (*sys_clock_gettime_t)(clockid_t, struct timespec *);
 static sys_clock_gettime_t sys_clock_gettime_vdso;
 
-int main(int argc, char **argv);
+extern int main(int argc, char **argv);
 
 #ifdef __x86_64__
-/* The actual entry point that calls main. */
-asm(".global _start\n"
-    "_start:\n"
-    "xorl %ebp, %ebp\n" /* This is the outermost stack frame. */
-    "movq %rsp, %rdi\n" /* Put argv in first argument. */
-    "call sys_main_amd64\n");
-
+__attribute__((used))
 noreturn void sys_main_amd64(void *stack)
 {
 	char *stack_c = (char *)stack;
