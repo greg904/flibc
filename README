@@ -1,2 +1,22 @@
-A small subset of a C standard library that only gives you what you ask for and
-that tries to never incur any general cost on your application.
+WHAT IS FLIBC
+
+flibc is a collection of :
+- Routines to interact with the Linux operating system without the help of the
+  C standard library.
+- Tools to help building executables that do not depend on the standard C
+  library.
+
+Contrary to the standard C library, flibc is made to never incur any general
+cost in your application: if you don't use a part of flibc, it should not be
+be included in the resulting application.
+
+WHY USE FLIBC
+
+You might want to consider about not using the C standard library and using a
+replacement for it instead, such as flibc, when the following conditions apply:
+- You have a small project with the following constraints: it will be built in
+  C and will run as a program on the Linux operating system.
+- You want to make the best use of the hardware.
+- You prioritize low memory usage and low power usage instead of speed and ease
+  of development/iteration.
+
