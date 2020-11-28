@@ -15,9 +15,9 @@
  * architecture that has a vDSO.
  */
 
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <limits.h>
 
 #include <elf.h>
 #include <flibc/str.h>
@@ -26,42 +26,40 @@
 
 /* And here's the code. */
 #ifndef ELF_BITS
-# if ULONG_MAX > 0xffffffffUL
-#  define ELF_BITS 64
-# else
-#  define ELF_BITS 32
-# endif
+#if ULONG_MAX > 0xffffffffUL
+#define ELF_BITS 64
+#else
+#define ELF_BITS 32
+#endif
 #endif
 
 #define ELF_BITS_XFORM2(bits, x) Elf##bits##_##x
 #define ELF_BITS_XFORM(bits, x) ELF_BITS_XFORM2(bits, x)
 #define ELF(x) ELF_BITS_XFORM(ELF_BITS, x)
 
-static struct vdso_info
-{
+static struct vdso_info {
 	bool valid;
 
 	/* Load information */
 	uintptr_t load_addr;
-	uintptr_t load_offset;  /* load_addr - recorded vaddr */
+	uintptr_t load_offset; /* load_addr - recorded vaddr */
 
 	/* Symbol table */
-	ELF(Sym) *symtab;
+	ELF(Sym) * symtab;
 	const char *symstrings;
-	ELF(Word) *bucket, *chain;
+	ELF(Word) * bucket, *chain;
 	ELF(Word) nbucket, nchain;
 
 	/* Version table */
-	ELF(Versym) *versym;
-	ELF(Verdef) *verdef;
+	ELF(Versym) * versym;
+	ELF(Verdef) * verdef;
 } vdso_info;
 
 /* Straight from the ELF specification. */
 static unsigned long elf_hash(const unsigned char *name)
 {
 	unsigned long h = 0, g;
-	while (*name)
-	{
+	while (*name) {
 		h = (h << 4) + *name++;
 		if ((g = h & 0xf0000000) != 0)
 			h ^= g >> 24;
@@ -79,33 +77,32 @@ void vdso_init_from_sysinfo_ehdr(uintptr_t base)
 
 	vdso_info.load_addr = base;
 
-	ELF(Ehdr) *hdr = (ELF(Ehdr)*)base;
+	ELF(Ehdr) *hdr = (ELF(Ehdr) *)base;
 	if (hdr->e_ident[EI_CLASS] !=
-	    (ELF_BITS == 32 ? ELFCLASS32 : ELFCLASS64)) {
-		return;  /* Wrong ELF class -- check ELF_BITS */
+		(ELF_BITS == 32 ? ELFCLASS32 : ELFCLASS64)) {
+		return; /* Wrong ELF class -- check ELF_BITS */
 	}
 
-	ELF(Phdr) *pt = (ELF(Phdr)*)(vdso_info.load_addr + hdr->e_phoff);
+	ELF(Phdr) *pt = (ELF(Phdr) *)(vdso_info.load_addr + hdr->e_phoff);
 	ELF(Dyn) *dyn = 0;
 
 	/*
 	 * We need two things from the segment table: the load offset
 	 * and the dynamic table.
 	 */
-	for (i = 0; i < hdr->e_phnum; i++)
-	{
+	for (i = 0; i < hdr->e_phnum; i++) {
 		if (pt[i].p_type == PT_LOAD && !found_vaddr) {
 			found_vaddr = true;
-			vdso_info.load_offset =	base
-				+ (uintptr_t)pt[i].p_offset
-				- (uintptr_t)pt[i].p_vaddr;
+			vdso_info.load_offset = base +
+				(uintptr_t)pt[i].p_offset -
+				(uintptr_t)pt[i].p_vaddr;
 		} else if (pt[i].p_type == PT_DYNAMIC) {
-			dyn = (ELF(Dyn)*)(base + pt[i].p_offset);
+			dyn = (ELF(Dyn) *)(base + pt[i].p_offset);
 		}
 	}
 
 	if (!found_vaddr || !dyn)
-		return;  /* Failed */
+		return; /* Failed */
 
 	/*
 	 * Fish out the useful bits of the dynamic table.
@@ -118,34 +115,33 @@ void vdso_init_from_sysinfo_ehdr(uintptr_t base)
 	for (i = 0; dyn[i].d_tag != DT_NULL; i++) {
 		switch (dyn[i].d_tag) {
 		case DT_STRTAB:
-			vdso_info.symstrings = (const char *)
-				((uintptr_t)dyn[i].d_un.d_ptr
-				 + vdso_info.load_offset);
+			vdso_info.symstrings =
+				(const char *)((uintptr_t)dyn[i].d_un.d_ptr +
+					vdso_info.load_offset);
 			break;
 		case DT_SYMTAB:
-			vdso_info.symtab = (ELF(Sym) *)
-				((uintptr_t)dyn[i].d_un.d_ptr
-				 + vdso_info.load_offset);
+			vdso_info.symtab =
+				(ELF(Sym) *)((uintptr_t)dyn[i].d_un.d_ptr +
+					vdso_info.load_offset);
 			break;
 		case DT_HASH:
-			hash = (ELF(Word) *)
-				((uintptr_t)dyn[i].d_un.d_ptr
-				 + vdso_info.load_offset);
+			hash = (ELF(Word) *)((uintptr_t)dyn[i].d_un.d_ptr +
+				vdso_info.load_offset);
 			break;
 		case DT_VERSYM:
-			vdso_info.versym = (ELF(Versym) *)
-				((uintptr_t)dyn[i].d_un.d_ptr
-				 + vdso_info.load_offset);
+			vdso_info.versym =
+				(ELF(Versym) *)((uintptr_t)dyn[i].d_un.d_ptr +
+					vdso_info.load_offset);
 			break;
 		case DT_VERDEF:
-			vdso_info.verdef = (ELF(Verdef) *)
-				((uintptr_t)dyn[i].d_un.d_ptr
-				 + vdso_info.load_offset);
+			vdso_info.verdef =
+				(ELF(Verdef) *)((uintptr_t)dyn[i].d_un.d_ptr +
+					vdso_info.load_offset);
 			break;
 		}
 	}
 	if (!vdso_info.symstrings || !vdso_info.symtab || !hash)
-		return;  /* Failed */
+		return; /* Failed */
 
 	if (!vdso_info.verdef)
 		vdso_info.versym = 0;
@@ -160,8 +156,8 @@ void vdso_init_from_sysinfo_ehdr(uintptr_t base)
 	vdso_info.valid = true;
 }
 
-static bool vdso_match_version(ELF(Versym) ver,
-			       const char *name, ELF(Word) hash)
+static bool vdso_match_version(
+	ELF(Versym) ver, const char *name, ELF(Word) hash)
 {
 	/*
 	 * This is a helper function to check if the version indexed by
@@ -179,23 +175,23 @@ static bool vdso_match_version(ELF(Versym) ver,
 	 */
 
 	/* First step: find the version definition */
-	ver &= 0x7fff;  /* Apparently bit 15 means "hidden" */
+	ver &= 0x7fff; /* Apparently bit 15 means "hidden" */
 	ELF(Verdef) *def = vdso_info.verdef;
-	while(true) {
-		if ((def->vd_flags & VER_FLG_BASE) == 0
-		    && (def->vd_ndx & 0x7fff) == ver)
+	while (true) {
+		if ((def->vd_flags & VER_FLG_BASE) == 0 &&
+			(def->vd_ndx & 0x7fff) == ver)
 			break;
 
 		if (def->vd_next == 0)
-			return false;  /* No definition. */
+			return false; /* No definition. */
 
 		def = (ELF(Verdef) *)((char *)def + def->vd_next);
 	}
 
 	/* Now figure out whether it matches. */
-	ELF(Verdaux) *aux = (ELF(Verdaux)*)((char *)def + def->vd_aux);
-	return def->vd_hash == hash
-		&& !strcmp(name, vdso_info.symstrings + aux->vda_name);
+	ELF(Verdaux) *aux = (ELF(Verdaux) *)((char *)def + def->vd_aux);
+	return def->vd_hash == hash &&
+		!strcmp(name, vdso_info.symstrings + aux->vda_name);
 }
 
 void *vdso_sym(const char *version, const char *name)
@@ -208,7 +204,8 @@ void *vdso_sym(const char *version, const char *name)
 	const unsigned char *name_u = (const unsigned char *)name;
 
 	ver_hash = elf_hash(version_u);
-	ELF(Word) chain = vdso_info.bucket[elf_hash(name_u) % vdso_info.nbucket];
+	ELF(Word)
+	chain = vdso_info.bucket[elf_hash(name_u) % vdso_info.nbucket];
 
 	for (; chain != STN_UNDEF; chain = vdso_info.chain[chain]) {
 		ELF(Sym) *sym = &vdso_info.symtab[chain];
@@ -217,7 +214,7 @@ void *vdso_sym(const char *version, const char *name)
 		if (ELF64_ST_TYPE(sym->st_info) != STT_FUNC)
 			continue;
 		if (ELF64_ST_BIND(sym->st_info) != STB_GLOBAL &&
-		    ELF64_ST_BIND(sym->st_info) != STB_WEAK)
+			ELF64_ST_BIND(sym->st_info) != STB_WEAK)
 			continue;
 		if (sym->st_shndx == SHN_UNDEF)
 			continue;
@@ -225,9 +222,9 @@ void *vdso_sym(const char *version, const char *name)
 			continue;
 
 		/* Check symbol version. */
-		if (vdso_info.versym
-		    && !vdso_match_version(vdso_info.versym[chain],
-					   version, ver_hash))
+		if (vdso_info.versym &&
+			!vdso_match_version(
+				vdso_info.versym[chain], version, ver_hash))
 			continue;
 
 		return (void *)(vdso_info.load_offset + sym->st_value);
@@ -239,8 +236,7 @@ void *vdso_sym(const char *version, const char *name)
 void vdso_init_from_auxv(void *auxv)
 {
 	ELF(auxv_t) *elf_auxv = auxv;
-	for (int i = 0; elf_auxv[i].a_type != AT_NULL; i++)
-	{
+	for (int i = 0; elf_auxv[i].a_type != AT_NULL; i++) {
 		if (elf_auxv[i].a_type == AT_SYSINFO_EHDR) {
 			vdso_init_from_sysinfo_ehdr(elf_auxv[i].a_un.a_val);
 			return;

@@ -36,18 +36,19 @@
 #define F_ASSERT(check)                                                        \
 	if (__builtin_expect(!(check), false)) {                               \
 		F_UNUSED(F_PRINT(2, "Assertion failed at ") &&                 \
-			 F_PRINT(2, __FILE__) &&                               \
-			 F_PRINT(2, ":" F_STR_LINE ".\n"));                    \
+			F_PRINT(2, __FILE__) &&                                \
+			F_PRINT(2, ":" F_STR_LINE ".\n"));                     \
 		sys_exit(1);                                                   \
 	}
 
 #define F_ASSERT_UNREACHABLE()                                                 \
 	do {                                                                   \
-		F_UNUSED(                                                      \
-		    F_PRINT(2,                                                 \
-			    "Code that was not supposed to be reachable was "  \
-			    "executed at ") &&                                 \
-		    F_PRINT(2, __FILE__) && F_PRINT(2, ":" F_STR_LINE ".\n")); \
+		F_UNUSED(F_PRINT(2,                                            \
+				 "Code that was not supposed to be "           \
+				 "reachable was "                              \
+				 "executed at ") &&                            \
+			F_PRINT(2, __FILE__) &&                                \
+			F_PRINT(2, ":" F_STR_LINE ".\n"));                     \
 		sys_exit(1);                                                   \
 	} while (false)
 

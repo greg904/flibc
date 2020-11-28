@@ -132,19 +132,19 @@ int sys_close(int fd);
 noreturn void sys_exit(int code);
 
 pid_t sys_clone(unsigned long flags, void *stack, int *parent_tid,
-		int *child_tid, unsigned long tls);
+	int *child_tid, unsigned long tls);
 int sys_kill(pid_t pid, int signal);
 
 int sys_socket(int family, int type, int protocol);
 int sys_bind(int fd, struct sockaddr *addr, size_t addr_len);
 int sys_listen(int fd, int backlog);
-int sys_accept4(int fd, struct sockaddr *peer_addr, int *peer_addr_len,
-		int flags);
+int sys_accept4(
+	int fd, struct sockaddr *peer_addr, int *peer_addr_len, int flags);
 
 int sys_epoll_create1(int flags);
 int sys_epoll_ctl(int epoll_fd, int op, int fd, struct epoll_event *event);
-int sys_epoll_wait(int epoll_fd, struct epoll_event *events, int max_events,
-		   int timeout);
+int sys_epoll_wait(
+	int epoll_fd, struct epoll_event *events, int max_events, int timeout);
 
 int sys_clock_gettime(clockid_t clock, struct timespec *time);
 int sys_nanosleep(const struct timespec *rqtp, struct timespec *rmtp);

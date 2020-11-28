@@ -3,8 +3,30 @@ Language: Cpp
 UseTab: Always
 TabWidth: 8
 IndentWidth: 8
+ContinuationIndentWidth: 8
+ColumnLimit: 80
+# Do not align code broken down into multiple lines so that the user can choose
+# the indentation's width to display in their code editor.
+AlignAfterOpenBracket: DontAlign
+AlignOperands: DontAlign
+AlignEscapedNewlines: Right
+AlignOperands: DontAlign
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+BinPackArguments: true
+BinPackParameters: true
 BreakBeforeBraces: Linux
-ReflowComments: true
 SortIncludes: true
-IndentPPDirectives: AfterHash
+IndentPPDirectives: None
+PenaltyBreakAssignment: 10
+PenaltyBreakBeforeFirstCallParameter: 30
+PenaltyBreakComment: 10
+PenaltyBreakFirstLessLess: 0
+PenaltyBreakString: 10
+PenaltyExcessCharacter: 100
+PenaltyReturnTypeOnItsOwnLine: 60
+ReflowComments: true
 ...

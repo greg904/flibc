@@ -20,3 +20,19 @@ replacement for it instead, such as flibc, when the following conditions apply:
 - You prioritize low memory usage and low power usage instead of speed and ease
   of development/iteration.
 
+CODE STYLE
+
+The code is written using tabs for indentation. The reasons to use tabs instead
+of spaces are:
+- Because a single tab character takes up less storage space that multiple
+  space characters.
+- To let the developer choose the indentation's width to display in their code
+  editor, even on basic code editors.
+
+Other code style rules are defined in the .clang-format and .editorconfig files
+in the root directory.
+
+Using automatic tools like clang-format allows the code base to stay uniform
+and the programmer to not have to think about code style rules most of the
+time.
+
